@@ -2,9 +2,10 @@ import 'package:doc_appointment_app/utils/config.dart';
 import 'package:flutter/material.dart';
 
 class DoctorCard extends StatelessWidget {
-  const DoctorCard({super.key, required this.route});
+  const DoctorCard({super.key, required this.route, required this.doctor});
 
   final String route;
+  final Map<String, dynamic> doctor; //recieve doctor details...
 
   @override
   Widget build(BuildContext context) {
@@ -19,30 +20,32 @@ class DoctorCard extends StatelessWidget {
             children: [
               SizedBox(
                 width: Config.widthSize * 0.33,
-                child: Image.asset('assets/doctor2.jpeg', fit: BoxFit.fill,),
+                child: Image.network("http://127.0.0.1:8000${doctor['doctor_profile']}",
+                 fit: BoxFit.fill,
+                 ),
               ),
-              const Flexible(
+               Flexible(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget> [
                       Text(
-                        'Dr Richard Tan',
-                        style: TextStyle(
+                        "Dr ${doctor['doctor_name']}",
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold
                         ),
                       ),
-                      Text(
-                        'Dental',
-                        style: TextStyle(
+                       Text(
+                        '${doctor['category']}',
+                        style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.normal
                         ),
                       ),
                        Spacer(),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget> [
                           Icon(

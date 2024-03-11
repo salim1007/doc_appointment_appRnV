@@ -1,4 +1,5 @@
 import 'package:doc_appointment_app/components/login_form.dart';
+import 'package:doc_appointment_app/components/sign_up.dart';
 import 'package:doc_appointment_app/components/social_button.dart';
 import 'package:doc_appointment_app/utils/config.dart';
 import 'package:doc_appointment_app/utils/text.dart';
@@ -12,6 +13,7 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
+  bool isSignedIn = true;
   @override
   Widget build(BuildContext context) {
     Config().init(context);
@@ -35,15 +37,20 @@ class _AuthPageState extends State<AuthPage> {
                 ),
                 Config.spaceSmall,
                 Text(
-                  AppText.enText['signIn_text']!,
+                  isSignedIn ?
+                  AppText.enText['signIn_text']!
+                  : AppText.enText['register_text']!,
                   style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold
                   ),
                 ),
                 Config.spaceSmall,
-                const LoginForm(),
+                isSignedIn ?
+                const LoginForm()
+                : const SignUpForm(),
                 Config.spaceSmall,
+                isSignedIn ?
                 Center(
                   child: TextButton(
                     onPressed: () {},
@@ -56,7 +63,8 @@ class _AuthPageState extends State<AuthPage> {
                       ),
                     ),
                   ),
-                ),
+                )
+                : Container() ,
                 const Spacer(),
                 Center(
                   child: Text(
@@ -81,19 +89,30 @@ class _AuthPageState extends State<AuthPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      AppText.enText['sign_up_text']!,
+                      isSignedIn ?
+                      AppText.enText['sign_up_text']!
+                      : AppText.enText['registered_text']!,
                       style: TextStyle(
                         fontWeight: FontWeight.normal,
                         fontSize: 16,
                         color: Colors.grey.shade500,
                       ),
                     ),
-                    const Text(
-                      'Sign Up',
-                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black,
+                    TextButton(
+                      onPressed: (){
+                        setState(() {
+                          isSignedIn = !isSignedIn;
+                        });
+                      },
+                      child: Text(
+                        isSignedIn ?
+                        'Sign Up'
+                        : 'Sign In',
+                         style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
                       ),
                     )
                   ],

@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:doc_appointment_app/components/appointment_card.dart';
 import 'package:doc_appointment_app/components/doctor_card.dart';
+import 'package:doc_appointment_app/providers/dio_provider.dart';
 import 'package:doc_appointment_app/utils/config.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,6 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+    Map<String, dynamic> user = {};
 
   List<Map<String, dynamic >> medCat = [
     {
@@ -40,11 +45,36 @@ class _HomePageState extends State<HomePage> {
     }
   ];
 
+  Future<void> getData() async{
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token')?? '';
+
+    if(token.isNotEmpty && token != ''){
+      final response = await DioProvider().getUser(token);
+      if(response != null){
+        setState(() {
+          user = json.decode(response); //convert into object..
+          print(user);
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    getData();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     Config().init(context);
     return Scaffold(
-      body: Padding(
+      body: user.isEmpty ? 
+      const Center(
+        child: CircularProgressIndicator(),
+      )
+      : Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 15,
@@ -55,17 +85,17 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Amanda',
-                        style: TextStyle(
+                        user['name'], 
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         child: CircleAvatar(
                           radius: 30,
                           backgroundImage: AssetImage('assets/sophie.jpeg'),
@@ -74,9 +104,9 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   Config.spaceSmall,
-                  const Text(
-                    'Category',
-                    style: TextStyle(
+                   Text(
+                    user['type'],
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold
                     ),
@@ -137,9 +167,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Config.spaceSmall,
                   Column(
-                    children: List.generate(10, (index){
-                      return const DoctorCard(
+                    children: List.generate(user['doctor'].length, (index){
+                      return  DoctorCard(
                         route: 'doc_details',
+                        doctor: user['doctor'][index],
                       );
                     }),
                   )
