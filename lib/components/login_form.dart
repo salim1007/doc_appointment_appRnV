@@ -72,7 +72,7 @@ class _LoginFormState extends State<LoginForm> {
                     final token = await DioProvider().getToken(
                         _emailController.text, _passController.text);
                     if(token){
-                      auth.loginSuccess();
+                      // auth.loginSuccess();
                       MyApp.navigatorKey.currentState!.pushNamed('main');
                     }
                   },

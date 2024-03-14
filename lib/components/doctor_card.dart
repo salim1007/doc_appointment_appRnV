@@ -70,7 +70,8 @@ class DoctorCard extends StatelessWidget {
           ),
         ),
         onTap: (){
-          Navigator.of(context).pushNamed(route);
+          // pass the arguments to display in doctor details...
+          Navigator.of(context).pushNamed(route, arguments: doctor);
         },
       ),
     );

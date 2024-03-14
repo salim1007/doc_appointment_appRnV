@@ -17,6 +17,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
     Map<String, dynamic> user = {};
+     Map<String, dynamic> doctor = {};
 
   List<Map<String, dynamic >> medCat = [
     {
@@ -54,7 +55,14 @@ class _HomePageState extends State<HomePage> {
       if(response != null){
         setState(() {
           user = json.decode(response); //convert into object..
-          print(user);
+          
+          for(var doctorData in user['doctor']){ 
+            //if there is appointment return for today, then pass doctor info...
+            if(doctorData['appointments'] != null){
+              doctor = doctorData;
+              print(doctor);
+            }
+          }
         });
       }
     }
@@ -156,7 +164,26 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Config.spaceSmall,
-                  const AppointmentCard(),
+                  doctor.isNotEmpty ?
+                  AppointmentCard(doctor: doctor, color: Config.primaryColor,)
+                  :Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10)
+                    ),
+                    child: const Center(
+                      child: Padding(padding: EdgeInsets.all(20),
+                      child: Text(
+                        'No Appointment Today',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      ),
+                    ),
+                  ),
                   Config.spaceSmall,
                   const Text(
                     'Top Doctors',

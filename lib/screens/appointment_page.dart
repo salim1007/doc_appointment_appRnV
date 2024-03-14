@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:doc_appointment_app/providers/dio_provider.dart';
 import 'package:doc_appointment_app/utils/config.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppointmentPage extends StatefulWidget {
   const AppointmentPage({super.key});
@@ -14,49 +18,42 @@ class _AppointmentPageState extends State<AppointmentPage> {
   FilterStatus status = FilterStatus.upcoming;
   Alignment _alignment = Alignment.centerLeft;
 
-  List<dynamic> schedules = [
-    {
-      'doctor_name':'Richard Tan',
-      'doctor_profile':'assets/doctor2.jpeg',
-      'category':'Dental',
-      'status':FilterStatus.upcoming
-    },
-    {
-      'doctor_name':'Max Lim',
-      'doctor_profile':'assets/doctor3.jpeg',
-      'category':'Cardiology',
-      'status':FilterStatus.complete
-    },
-    {
-      'doctor_name':'Jane Wong',
-      'doctor_profile':'assets/doctor4.jpeg',
-      'category':'Respirations',
-      'status':FilterStatus.complete
-    },
-    {
-      'doctor_name':'Jenny Wong',
-      'doctor_profile':'assets/doctor1.jpeg',
-      'category':'General',
-      'status':FilterStatus.cancel
-    },
-  ];
+  List<dynamic> schedules = [];
+
+  Future<void> getAppointments() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token')?? '';
+    final appointment = await DioProvider().getAppointments(token);
+    if(appointment != 'Error'){
+      setState(() {
+        schedules = json.decode(appointment);
+        print(schedules);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    getAppointments();
+    super.initState();
+  }
 
 
   @override
   Widget build(BuildContext context) {
 
     List<dynamic> filteredSchedules = schedules.where((var schedule) {
-      // switch(schedule['status']){
-      //   case 'upcoming':
-      //     schedule['status'] = FilterStatus.upcoming;
-      //     break;
-      //   case 'complete':
-      //     schedule['status'] = FilterStatus.complete;
-      //     break;
-      //   case 'cancel':
-      //     schedule['status'] = FilterStatus.cancel;
-      //     break;
-      // }
+      switch(schedule['status']){
+        case 'upcoming':
+          schedule['status'] = FilterStatus.upcoming;
+          break;
+        case 'complete':
+          schedule['status'] = FilterStatus.complete;
+          break;
+        case 'cancel':
+          schedule['status'] = FilterStatus.cancel;
+          break;
+      }
       return schedule['status'] == status;
     }).toList();
 
@@ -139,7 +136,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
               child: ListView.builder(
                 itemCount: filteredSchedules.length,
                   itemBuilder: ((context, index){
-                    var _schedule = filteredSchedules[index];
+                    var schedule = filteredSchedules[index];
                     bool isLastElement = filteredSchedules.length - 1 == index;
                     return Card(
                       shape: RoundedRectangleBorder(
@@ -159,21 +156,21 @@ class _AppointmentPageState extends State<AppointmentPage> {
                             Row(
                               children: [
                                 CircleAvatar(
-                                  backgroundImage: AssetImage(_schedule['doctor_profile']),
+                                  backgroundImage: NetworkImage("http://127.0.0.1:8000${schedule['doctor_profile']}"),
                                 ),
                                 const SizedBox(width: 15,),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      _schedule['doctor_name'],
+                                      schedule['doctor_name'],
                                       style: const TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                     Text(
-                                      _schedule['category'],
+                                      schedule['category'],
                                       style: const TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.w600,
@@ -187,7 +184,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                             const SizedBox(
                               height: 15,
                             ),
-                            const ScheduleCard(),
+                             ScheduleCard( date: schedule['date'], day: schedule['day'], time: schedule['time'],),
                             const SizedBox(
                               height: 15,
                             ),
@@ -239,7 +236,12 @@ class _AppointmentPageState extends State<AppointmentPage> {
 }
 
 class ScheduleCard extends StatelessWidget {
-  const ScheduleCard({super.key});
+  const ScheduleCard({super.key, required this.date, required this.day, required this.time});
+
+  final String date;
+  final String day;
+  final String time;
+
 
   @override
   Widget build(BuildContext context) {
@@ -250,32 +252,32 @@ class ScheduleCard extends StatelessWidget {
       ),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      child: const Row(
+      child:  Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Icon(
+          const Icon(
             Icons.calendar_today,
             color: Colors.white,
             size: 15,
           ),
-          SizedBox(width: 5,),
+          const SizedBox(width: 5,),
           Text(
-            'Monday, 11/23/2024',
-            style: TextStyle(
+            '$day, $date',
+            style: const TextStyle(
               color: Colors.white,
             ),
           ),
-          SizedBox(width: 20,),
-          Icon(
+          const SizedBox(width: 20,),
+          const Icon(
             Icons.access_alarm,
             color: Colors.white,
             size: 17,
           ),
-          SizedBox(width: 5,),
-          Flexible(
+          const SizedBox(width: 5,),
+           Flexible(
               child: Text(
-                '2:00 PM',
-                style: TextStyle(
+                time,
+                style: const TextStyle(
                   color: Colors.white,
 
                 ),

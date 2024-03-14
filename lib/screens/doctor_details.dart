@@ -17,6 +17,9 @@ class _DoctorDetailsState extends State<DoctorDetails> {
   bool isFav = false;
   @override
   Widget build(BuildContext context) {
+    // get arguments passed from doctor card.....
+    final doctorDetails = ModalRoute.of(context)!.settings.arguments as Map;
+
     return Scaffold(
       appBar: CustomAppBar(
         appTitle: 'Doctor Details',
@@ -40,8 +43,8 @@ class _DoctorDetailsState extends State<DoctorDetails> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            AboutDoctor(),
-            DetailBody(),
+            AboutDoctor(doctor: doctorDetails,),
+            DetailBody(doctor: doctorDetails,),
             Spacer(),
             Padding(
               padding: EdgeInsets.all(20),
@@ -49,7 +52,8 @@ class _DoctorDetailsState extends State<DoctorDetails> {
                   width: double.infinity,
                   title: 'Book Appointment',
                   onPressed: () {
-                    Navigator.of(context).pushNamed('booking_page');
+                    // pass doctor id for booking process...
+                    Navigator.of(context).pushNamed('booking_page', arguments: {'doctor_id': doctorDetails['doc_id']});
                   },
                   disable: false
               ),
@@ -62,7 +66,9 @@ class _DoctorDetailsState extends State<DoctorDetails> {
 }
 
 class AboutDoctor extends StatelessWidget {
-  const AboutDoctor({super.key});
+  const AboutDoctor({super.key, required this.doctor});
+
+  final Map<dynamic, dynamic> doctor; 
 
   @override
   Widget build(BuildContext context) {
@@ -71,15 +77,15 @@ class AboutDoctor extends StatelessWidget {
       width: double.infinity,
       child: Column(
         children: <Widget>[
-          const CircleAvatar(
+           CircleAvatar(
             radius: 65.0,
-            backgroundImage: AssetImage('assets/doctor2.jpeg'),
+            backgroundImage: NetworkImage("http://127.0.0.1:8000${doctor['doctor_profile']}"),
             backgroundColor: Colors.white,
           ),
           Config.spaceSmall,
-          const Text(
-            'Dr Richard Tan',
-            style: TextStyle(
+           Text(
+            "Dr ${doctor['doctor_name']}",
+            style: const TextStyle(
               color: Colors.black,
               fontSize: 24.0,
               fontWeight: FontWeight.bold
@@ -120,7 +126,10 @@ class AboutDoctor extends StatelessWidget {
 }
 
 class DetailBody extends StatelessWidget {
-  const DetailBody({super.key});
+  const DetailBody({super.key, required this.doctor});
+
+    final Map<dynamic, dynamic> doctor; 
+
 
   @override
   Widget build(BuildContext context) {
@@ -128,22 +137,22 @@ class DetailBody extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20),
       margin: EdgeInsets.only(bottom: 30),
-      child:  const Column(
+      child:   Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          DoctorInfo(),
-          SizedBox(height: 5,),
-          Text(
+           DoctorInfo(patients: doctor['patients'], exp: doctor['experience'],),
+          const SizedBox(height: 5,),
+          const Text(
             'About Doctor',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 18
             ),
           ),
-          SizedBox(height: 5,),
+          const SizedBox(height: 5,),
           Text(
-            'Doctor Richard Tan is an experienced Dentist at Sarawak. He is graduated since 2008, and completed his training at Sungai Buloh general Hospital.',
-            style: TextStyle(
+            'Dr. ${doctor['doctor_name']} is an experienced ${doctor['category']} specialist  at Sarawak, graduated since 2008, and completed his/her training at Sungai Buloh general Hospital.',
+            style: const TextStyle(
               fontWeight: FontWeight.w500,
               height: 1.5,
             ),
@@ -157,23 +166,26 @@ class DetailBody extends StatelessWidget {
 }
 
 class DoctorInfo extends StatelessWidget {
-  const DoctorInfo({super.key});
+  const DoctorInfo({super.key, required this.patients, required this.exp});
+
+  final int patients;
+  final int exp;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return  Row(
       children: <Widget>[
         InfoCard(
           label: 'Patients',
-          value: '109',
+          value: '$patients',
         ),
-        SizedBox(width: 15.0,),
-        InfoCard(
+        const SizedBox(width: 15.0,),
+         InfoCard(
           label: 'Experience',
-          value: '10 years',
+          value: '$exp',
         ),
-        SizedBox(width: 15.0,),
-        InfoCard(
+        const SizedBox(width: 15.0,),
+        const InfoCard(
           label: 'Rating',
           value: '4.6',
         ),
