@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:doc_appointment_app/components/button.dart';
+import 'package:doc_appointment_app/models/auth_model.dart';
+import 'package:doc_appointment_app/providers/dio_provider.dart';
 import 'package:doc_appointment_app/utils/config.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../components/custom_appbar.dart';
-
 
 class DoctorDetails extends StatefulWidget {
   const DoctorDetails({super.key});
@@ -13,7 +17,6 @@ class DoctorDetails extends StatefulWidget {
 }
 
 class _DoctorDetailsState extends State<DoctorDetails> {
-
   bool isFav = false;
   @override
   Widget build(BuildContext context) {
@@ -28,23 +31,49 @@ class _DoctorDetailsState extends State<DoctorDetails> {
         ),
         actions: [
           IconButton(
-              onPressed: (){
-                setState(() {
-                  isFav = !isFav;
-                });
+              onPressed: () async {
+                final list =
+                    Provider.of<AuthModel>(context, listen: false).getFav;
+
+                //if doc id already exists, on tapping you remove it....
+                if (list.contains(doctorDetails['doc_id'])) {
+                  list.removeWhere((id) => id == doctorDetails['doc_id']);
+                } else {
+                  //else, add it to list
+                  list.add(doctorDetails['doc_id']);
+                }
+
+                //update the list and notify all widgets...
+                Provider.of<AuthModel>(context, listen: false).setFavList(list);
+
+                final SharedPreferences prefs =
+                    await SharedPreferences.getInstance();
+                final token = prefs.getString('token') ?? '';
+
+                if (token.isNotEmpty && token != '') {
+                  final response = await DioProvider().storeFavDoc(token, list);
+                  if (response == 200) {
+                    setState(() {
+                      isFav = !isFav;
+                    });
+                  }
+                }
               },
               icon: FaIcon(
                 isFav ? Icons.favorite_rounded : Icons.favorite_outline,
                 color: Colors.red,
-              )
-          )
+              ))
         ],
       ),
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            AboutDoctor(doctor: doctorDetails,),
-            DetailBody(doctor: doctorDetails,),
+            AboutDoctor(
+              doctor: doctorDetails,
+            ),
+            DetailBody(
+              doctor: doctorDetails,
+            ),
             Spacer(),
             Padding(
               padding: EdgeInsets.all(20),
@@ -53,10 +82,10 @@ class _DoctorDetailsState extends State<DoctorDetails> {
                   title: 'Book Appointment',
                   onPressed: () {
                     // pass doctor id for booking process...
-                    Navigator.of(context).pushNamed('booking_page', arguments: {'doctor_id': doctorDetails['doc_id']});
+                    Navigator.of(context).pushNamed('booking_page',
+                        arguments: {'doctor_id': doctorDetails['doc_id']});
                   },
-                  disable: false
-              ),
+                  disable: false),
             )
           ],
         ),
@@ -68,7 +97,7 @@ class _DoctorDetailsState extends State<DoctorDetails> {
 class AboutDoctor extends StatelessWidget {
   const AboutDoctor({super.key, required this.doctor});
 
-  final Map<dynamic, dynamic> doctor; 
+  final Map<dynamic, dynamic> doctor;
 
   @override
   Widget build(BuildContext context) {
@@ -77,19 +106,19 @@ class AboutDoctor extends StatelessWidget {
       width: double.infinity,
       child: Column(
         children: <Widget>[
-           CircleAvatar(
+          CircleAvatar(
             radius: 65.0,
-            backgroundImage: NetworkImage("http://127.0.0.1:8000${doctor['doctor_profile']}"),
+            backgroundImage: NetworkImage(
+                "http://127.0.0.1:8000${doctor['doctor_profile']}"),
             backgroundColor: Colors.white,
           ),
           Config.spaceSmall,
-           Text(
+          Text(
             "Dr ${doctor['doctor_name']}",
             style: const TextStyle(
-              color: Colors.black,
-              fontSize: 24.0,
-              fontWeight: FontWeight.bold
-            ),
+                color: Colors.black,
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold),
           ),
           Config.spaceSmall,
           SizedBox(
@@ -110,15 +139,13 @@ class AboutDoctor extends StatelessWidget {
             child: const Text(
               'Sawak General Hospital',
               style: TextStyle(
-                color: Colors.black,
-                fontSize: 15,
-                fontWeight: FontWeight.bold
-              ),
+                  color: Colors.black,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
               softWrap: true,
             ),
           ),
-
         ],
       ),
     );
@@ -128,8 +155,7 @@ class AboutDoctor extends StatelessWidget {
 class DetailBody extends StatelessWidget {
   const DetailBody({super.key, required this.doctor});
 
-    final Map<dynamic, dynamic> doctor; 
-
+  final Map<dynamic, dynamic> doctor;
 
   @override
   Widget build(BuildContext context) {
@@ -137,19 +163,23 @@ class DetailBody extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20),
       margin: EdgeInsets.only(bottom: 30),
-      child:   Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-           DoctorInfo(patients: doctor['patients'], exp: doctor['experience'],),
-          const SizedBox(height: 5,),
+          DoctorInfo(
+            patients: doctor['patients'],
+            exp: doctor['experience'],
+          ),
+          const SizedBox(
+            height: 5,
+          ),
           const Text(
             'About Doctor',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18
-            ),
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
           ),
-          const SizedBox(height: 5,),
+          const SizedBox(
+            height: 5,
+          ),
           Text(
             'Dr. ${doctor['doctor_name']} is an experienced ${doctor['category']} specialist  at Sarawak, graduated since 2008, and completed his/her training at Sungai Buloh general Hospital.',
             style: const TextStyle(
@@ -173,18 +203,22 @@ class DoctorInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  Row(
+    return Row(
       children: <Widget>[
         InfoCard(
           label: 'Patients',
           value: '$patients',
         ),
-        const SizedBox(width: 15.0,),
-         InfoCard(
+        const SizedBox(
+          width: 15.0,
+        ),
+        InfoCard(
           label: 'Experience',
           value: '$exp',
         ),
-        const SizedBox(width: 15.0,),
+        const SizedBox(
+          width: 15.0,
+        ),
         const InfoCard(
           label: 'Rating',
           value: '4.6',
@@ -212,24 +246,24 @@ class InfoCard extends StatelessWidget {
           vertical: 30,
           horizontal: 15,
         ),
-        child:  Column(
-          children: <Widget> [
+        child: Column(
+          children: <Widget>[
             Text(
               label,
               style: const TextStyle(
                   color: Colors.black,
                   fontSize: 12,
-                  fontWeight: FontWeight.w600
-              ),
+                  fontWeight: FontWeight.w600),
             ),
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             Text(
               value,
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
-                  fontWeight: FontWeight.w500
-              ),
+                  fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -237,7 +271,3 @@ class InfoCard extends StatelessWidget {
     );
   }
 }
-
-
-
-

@@ -49,7 +49,10 @@ class AuthModel extends ChangeNotifier{
     _isLogin = true;
     user = userData;
     appointment = appointmentInfo;
-    _fav = json.decode(user['details']['fav']);
+    if(user['details']['fav'] != null){
+      _fav = json.decode(user['details']['fav']);
+
+    }
     notifyListeners();
   }
 }

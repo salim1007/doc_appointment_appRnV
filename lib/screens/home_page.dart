@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:doc_appointment_app/components/appointment_card.dart';
 import 'package:doc_appointment_app/components/doctor_card.dart';
+import 'package:doc_appointment_app/models/auth_model.dart';
 import 'package:doc_appointment_app/providers/dio_provider.dart';
 import 'package:doc_appointment_app/utils/config.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +19,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
     Map<String, dynamic> user = {};
-     Map<String, dynamic> doctor = {};
+    Map<String, dynamic> doctor = {};
+    List<dynamic> favList = [];
 
   List<Map<String, dynamic >> medCat = [
     {
@@ -46,37 +49,20 @@ class _HomePageState extends State<HomePage> {
     }
   ];
 
-  Future<void> getData() async{
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token')?? '';
+  
 
-    if(token.isNotEmpty && token != ''){
-      final response = await DioProvider().getUser(token);
-      if(response != null){
-        setState(() {
-          user = json.decode(response); //convert into object..
-          
-          for(var doctorData in user['doctor']){ 
-            //if there is appointment return for today, then pass doctor info...
-            if(doctorData['appointments'] != null){
-              doctor = doctorData;
-              print(doctor);
-            }
-          }
-        });
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    getData();
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     Config().init(context);
+    user = Provider.of<AuthModel>(context, listen: false).getUser;
+    doctor = Provider.of<AuthModel>(context, listen: false).getAppointment;
+    favList = Provider.of<AuthModel>(context, listen: false).getFav;
+
+    print('user data is: $user');
+    print('favlist is data is: $favList');
+
+
     return Scaffold(
       body: user.isEmpty ? 
       const Center(
